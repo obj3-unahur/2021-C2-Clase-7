@@ -1,2 +1,7 @@
+.idea
+.bsp
+project
+target
+build.sbt
 *.class
 *.log
