@@ -71,14 +71,148 @@ class DescribirVisitor extends AccionVisitor {
 // -------------------------------------------------------------
 
 class SimplificarVisitor extends AccionVisitor {
+  private var simplificado = Seq[Accion]()
 
-  override def visitVaciar(accion: Vaciar.type): Unit = ???
+//  private var ultimaAccionSumar = false
+//  private var ultimaCantidadSumada = 0
+//
+//  override def visitVaciar(accion: Vaciar.type): Unit = ???
+//
+//  override def visitSumar(accion: Sumar): Unit = {
+//    if (ultimaAccionSumar) {
+//      ultimaCantidadSumada += accion.qty
+//      simplificado = simplificado.dropRight(1) :+ new Sumar(ultimaCantidadSumada)
+//    } else {
+//      simplificado = simplificado :+ accion
+//      ultimaCantidadSumada = accion.qty
+//      ultimaAccionSumar = true
+//    }
+//  }
+//
+//  override def visitIntercambiar(accion: Intercambiar.type): Unit = ???
+//
+//  override def visitCargarContenedor(accion: CargarContenedor): Unit = ???
+//
+//  override def visitGuardarContenedor(accion: GuardarContenedor): Unit = ???
 
-  override def visitSumar(accion: Sumar): Unit = ???
 
-  override def visitIntercambiar(accion: Intercambiar.type): Unit = ???
 
-  override def visitCargarContenedor(accion: CargarContenedor): Unit = ???
 
-  override def visitGuardarContenedor(accion: GuardarContenedor): Unit = ???
+
+
+
+
+
+
+
+
+
+
+
+  private var ultimaAccionSumar = false
+  private var ultimaCantidadSumada = -1
+  private var ultimaAccionVaciar = false
+  private var ultimaAccionIntercambiar = false
+  private var ultimaAccionCargar = false
+  private var ultimoContenedorCargado = -1
+  private var ultimaAccionGuardar = false
+  private var ultimoContenedorGuardado = -1
+
+
+  override def visitVaciar(accion: Vaciar.type): Unit = {
+    if (!ultimaAccionVaciar) {
+      simplificado = simplificado :+ accion
+
+      ultimaAccionSumar = false
+      ultimaAccionVaciar = true
+      ultimaAccionIntercambiar = false
+      ultimaAccionCargar = false
+      ultimaAccionGuardar = false
+    }
+  }
+
+  override def visitSumar(accion: Sumar): Unit = {
+    if (ultimaAccionSumar) {
+      ultimaCantidadSumada += accion.qty
+      simplificado = simplificado.dropRight(1) :+ new Sumar(ultimaCantidadSumada)
+    } else {
+      ultimaCantidadSumada = accion.qty
+      simplificado = simplificado :+ accion
+
+      ultimaAccionSumar = true
+      ultimaAccionVaciar = false
+      ultimaAccionIntercambiar = false
+      ultimaAccionCargar = false
+      ultimaAccionGuardar = false
+    }
+  }
+
+  override def visitIntercambiar(accion: Intercambiar.type): Unit = {
+    if (ultimaAccionIntercambiar) {
+      ultimaAccionIntercambiar = false
+      simplificado = simplificado.dropRight(1)
+    } else {
+      simplificado = simplificado :+ accion
+
+      ultimaAccionSumar = false
+      ultimaAccionVaciar = false
+      ultimaAccionIntercambiar = true
+      ultimaAccionCargar = false
+      ultimaAccionGuardar = false
+    }
+  }
+
+  override def visitCargarContenedor(accion: CargarContenedor): Unit = {
+    if (ultimaAccionCargar) {
+      if (ultimoContenedorCargado != accion.id) {
+        simplificado = simplificado.dropRight(1) :+ accion
+        ultimoContenedorCargado = accion.id
+      }
+    } else if (ultimaAccionGuardar && ultimoContenedorGuardado == accion.id) {
+        simplificado = simplificado.dropRight(1)
+
+        ultimaAccionSumar = false
+        ultimaAccionVaciar = false
+        ultimaAccionIntercambiar = false
+        ultimaAccionCargar = false
+        ultimaAccionGuardar = false
+    } else {
+      simplificado = simplificado :+ accion
+
+      ultimaAccionSumar = false
+      ultimaAccionVaciar = false
+      ultimaAccionIntercambiar = false
+      ultimaAccionCargar = true
+      ultimoContenedorCargado = accion.id
+      ultimaAccionGuardar = false
+    }
+  }
+
+  override def visitGuardarContenedor(accion: GuardarContenedor): Unit = {
+    if (ultimaAccionGuardar) {
+      if (ultimoContenedorGuardado != accion.id) {
+        simplificado = simplificado.dropRight(1) :+ accion
+        ultimoContenedorGuardado = accion.id
+      }
+    } else if (ultimaAccionCargar && ultimoContenedorCargado == accion.id) {
+        simplificado = simplificado.dropRight(1)
+
+        ultimaAccionSumar = false
+        ultimaAccionVaciar = false
+        ultimaAccionIntercambiar = false
+        ultimaAccionCargar = false
+        ultimaAccionGuardar = false
+    } else {
+      simplificado = simplificado :+ accion
+
+      ultimaAccionSumar = false
+      ultimaAccionVaciar = false
+      ultimaAccionIntercambiar = false
+      ultimaAccionCargar = false
+      ultimaAccionGuardar = true
+      ultimoContenedorGuardado = accion.id
+    }
+  }
+
+  def result: Seq[Accion] = simplificado
 }
